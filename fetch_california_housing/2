@@ -1,0 +1,66 @@
+# STEP 2: DATA CLEANING & EDA
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.datasets import fetch_california_housing
+
+# Load data directly from sklearn (BEST: No file dependency)
+dataset = fetch_california_housing(as_frame=True)
+data = dataset.frame.copy()
+data['MedHouseVal'] = dataset.target
+
+#### 2.1 MISSING VALUES (ALWAYS CHECK FIRST)
+print("✓ 2.1 MISSING VALUES CHECK")
+print(data.isnull().sum())
+# WHY: Missing data breaks models. Must handle before proceeding.
+# AVOID: dropna() without analysis - you might lose valuable data.
+
+#### 2.2 DUPLICATES (REMOVE REDUNDANT DATA)
+print("\n✓ 2.2 DUPLICATES CHECK")
+print(f"Duplicates: {data.duplicated().sum()}")
+# WHY: Duplicates bias model training.
+# AVOID: Keeping duplicates - they inflate dataset size artificially.
+
+#### 2.3 SUMMARY STATS (UNDERSTAND DATA SPREAD)
+print("\n✓ 2.3 SUMMARY STATISTICS")
+print(data.describe())
+# WHY: Identify outliers, scale differences, and data distribution.
+# AVOID: Ignoring min/max values - extreme values need treatment.
+
+#### 2.4 DISTRIBUTIONS (VISUALIZE DATA SHAPE)
+print("\n✓ 2.4 DISTRIBUTION PLOTS (Close each to continue)")
+numerical_features = data.select_dtypes(include=[np.number]).columns
+for feature in numerical_features:
+    plt.figure(figsize=(8,4))
+    sns.histplot(data[feature], kde=True)
+    plt.title(f'Distribution of {feature}')
+    plt.show()
+# WHY: See skewness and distribution shape for transformation needs.
+# AVOID: Assuming normal distribution - real data is often skewed.
+
+#### 2.5 OUTLIERS (DETECT EXTREME VALUES)
+print("\n✓ 2.5 OUTLIER DETECTION (Close each to continue)")
+for feature in numerical_features:
+    plt.figure(figsize=(8,4))
+    sns.boxplot(x=data[feature])
+    plt.title(f'Outliers in {feature}')
+    plt.show()
+# WHY: Outliers can distort model performance.
+# AVOID: Automatic removal - sometimes outliers are valid observations.
+
+#### 2.6 CORRELATIONS (FEATURE RELATIONSHIPS)
+print("\n✓ 2.6 CORRELATION MATRIX")
+plt.figure(figsize=(10,8))
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm', fmt='.2f', center=0)
+plt.title('Feature Correlation Matrix')
+plt.show()
+# WHY: Identify multicollinearity and target relationships.
+# AVOID: Keeping highly correlated features (>0.8) - they add redundancy.
+
+# Save cleaned data for next step
+data.to_csv('cleaned_data.csv', index=False)
+print("\n💾 Data saved for Step 3: Feature Engineering")
+
+#### READY FOR STEP 3: FEATURE ENGINEERING
+# NEXT: Create new features, handle skewness, and encode categorical data
