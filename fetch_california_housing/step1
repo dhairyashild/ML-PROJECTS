@@ -1,0 +1,58 @@
+# Tab 1 (DeepSeek): Work on California Housing (regression, scaling, feature engineering for numerical data).
+
+# STEP 1: PROBLEM DEFINITION & DATA LOADING
+import pandas as pd
+from sklearn.datasets import fetch_california_housing
+
+# 1.1 Load dataset using sklearn (California Housing)
+dataset = fetch_california_housing(as_frame=True)
+
+#### ALTERNATIVE DATA LOADING METHODS (FOR REFERENCE)
+#### METHOD 2: Pandas from URL (for Titanic, etc.)
+# dataset = pd.read_csv('https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv')
+
+#### METHOD 3: Database connection (PostgreSQL, MySQL)
+# import sqlalchemy
+# engine = sqlalchemy.create_engine('postgresql://user:pass@localhost:5432/db')
+# dataset = pd.read_sql('SELECT * FROM table_name', engine)
+
+#### METHOD 4: Cloud storage (AWS S3, Azure Blob)
+# import boto3
+# s3 = boto3.client('s3')
+# dataset = pd.read_csv('s3://bucket-name/path/to/file.csv')
+
+# 1.2 Create working copy
+data = dataset.frame.copy()
+data['MedHouseVal'] = dataset.target
+
+# 1.3 Data validation checks
+print("✓ CHECK 1: WORKING DATA STRUCTURE")
+print(data.head(3))
+
+print("✓ CHECK 2: DATA SHAPE")
+print(f"Rows: {data.shape[0]}, Columns: {data.shape[1]}")
+
+print("✓ CHECK 3: DATA TYPES")
+print(data.dtypes)
+
+print("✓ CHECK 4: TARGET VARIABLE VERIFICATION")
+target_column = 'MedHouseVal'
+if target_column not in data.columns:
+    print(f"✗ ERROR: Target '{target_column}' missing")
+    exit()
+print(f"✓ Target '{target_column}' found")
+
+# 1.4 Separate features and target
+X = data.drop(columns=[target_column])
+y = data[target_column]
+
+print(f"\n✓ FINAL VALIDATION:")
+print(f"Features shape: {X.shape}")
+print(f"Target shape: {y.shape}")
+print(f"Target sample values: {y[:3].tolist()}")
+
+# 1.5 Save processed data
+data.to_csv('processed_data.csv', index=False)
+print("\n💾 Working data saved as 'processed_data.csv'")
+
+#### READY FOR STEP 2: DATA CLEANING & EDA
