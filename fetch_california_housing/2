@@ -1,4 +1,5 @@
 # STEP 2: DATA CLEANING & EDA
+# Stages: 2.1 Missing Values, 2.2 Duplicates, 2.3 Summary Stats, 2.4 Distributions, 2.5 Outliers, 2.6 Correlations
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,25 +11,30 @@ dataset = fetch_california_housing(as_frame=True)
 data = dataset.frame.copy()
 data['MedHouseVal'] = dataset.target
 
-#### 2.1 MISSING VALUES (ALWAYS CHECK FIRST)
+#### 2.1 MISSING VALUES (CRITICAL FIRST STEP)
 print("✓ 2.1 MISSING VALUES CHECK")
-print(data.isnull().sum())
-# WHY: Missing data breaks models. Must handle before proceeding.
-# AVOID: dropna() without analysis - you might lose valuable data.
+missing_values = data.isnull().sum()
+print(missing_values)
+# BEST PRACTICE: Always check missing values first - they break models
+# INDUSTRY RULE: If <5% missing, use imputation (mean/median). If >5%, consider removal
+# AVOID: Using dropna() without analyzing pattern of missingness
 
-#### 2.2 DUPLICATES (REMOVE REDUNDANT DATA)
+#### 2.2 DUPLICATES (DATA QUALITY CHECK)
 print("\n✓ 2.2 DUPLICATES CHECK")
-print(f"Duplicates: {data.duplicated().sum()}")
-# WHY: Duplicates bias model training.
-# AVOID: Keeping duplicates - they inflate dataset size artificially.
+duplicate_count = data.duplicated().sum()
+print(f"Duplicates: {duplicate_count}")
+# WHY: Duplicates bias model training and validation
+# REAL-TIME: Always remove duplicates - they add no information and skew results
+# AVOID: Keeping duplicates for "more data" - it creates overfitting
 
-#### 2.3 SUMMARY STATS (UNDERSTAND DATA SPREAD)
+#### 2.3 SUMMARY STATS (DATA UNDERSTANDING)
 print("\n✓ 2.3 SUMMARY STATISTICS")
 print(data.describe())
-# WHY: Identify outliers, scale differences, and data distribution.
-# AVOID: Ignoring min/max values - extreme values need treatment.
+# MUST CHECK: min/max (outliers), mean vs median (skewness), std (spread)
+# REAL-TIME USE: Identify features needing scaling (large std) or transformation (skewed)
+# AVOID: Ignoring large differences between mean and median - indicates skewness
 
-#### 2.4 DISTRIBUTIONS (VISUALIZE DATA SHAPE)
+#### 2.4 DISTRIBUTIONS (VISUAL ANALYSIS)
 print("\n✓ 2.4 DISTRIBUTION PLOTS (Close each to continue)")
 numerical_features = data.select_dtypes(include=[np.number]).columns
 for feature in numerical_features:
@@ -36,31 +42,36 @@ for feature in numerical_features:
     sns.histplot(data[feature], kde=True)
     plt.title(f'Distribution of {feature}')
     plt.show()
-# WHY: See skewness and distribution shape for transformation needs.
-# AVOID: Assuming normal distribution - real data is often skewed.
+# WHY: Visualize skewness, modality, and distribution shape
+# REAL-TIME: Right-skewed data needs log transform, normal data works with linear models
+# AVOID: Assuming normal distribution - most real-world data is skewed
 
-#### 2.5 OUTLIERS (DETECT EXTREME VALUES)
+#### 2.5 OUTLIERS (EXTREME VALUE DETECTION)
 print("\n✓ 2.5 OUTLIER DETECTION (Close each to continue)")
 for feature in numerical_features:
     plt.figure(figsize=(8,4))
     sns.boxplot(x=data[feature])
     plt.title(f'Outliers in {feature}')
     plt.show()
-# WHY: Outliers can distort model performance.
-# AVOID: Automatic removal - sometimes outliers are valid observations.
+# BEST PRACTICE: Use IQR method for outlier detection: Q1 - 1.5*IQR, Q3 + 1.5*IQR
+# REAL-TIME: Cap outliers at 5th/95th percentiles instead of removing
+# AVOID: Automatic outlier removal - some outliers are valid business cases
 
 #### 2.6 CORRELATIONS (FEATURE RELATIONSHIPS)
 print("\n✓ 2.6 CORRELATION MATRIX")
 plt.figure(figsize=(10,8))
-sns.heatmap(data.corr(), annot=True, cmap='coolwarm', fmt='.2f', center=0)
+correlation_matrix = data.corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f', center=0)
 plt.title('Feature Correlation Matrix')
+plt.tight_layout()
 plt.show()
-# WHY: Identify multicollinearity and target relationships.
-# AVOID: Keeping highly correlated features (>0.8) - they add redundancy.
+# CRITICAL: Check correlation with target (MedHouseVal) - high correlation = important feature
+# REAL-TIME: Remove one of any feature pair with correlation >0.8 (multicollinearity)
+# AVOID: Keeping highly correlated features - they destabilize linear models
 
 # Save cleaned data for next step
 data.to_csv('cleaned_data.csv', index=False)
 print("\n💾 Data saved for Step 3: Feature Engineering")
 
 #### READY FOR STEP 3: FEATURE ENGINEERING
-# NEXT: Create new features, handle skewness, and encode categorical data
+# NEXT: Create new features, handle skewness, and prepare for modeling
