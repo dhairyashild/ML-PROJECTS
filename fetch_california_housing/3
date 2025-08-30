@@ -1,0 +1,72 @@
+# STEP 3: FEATURE ENGINEERING
+# Stages: 3.1 Feature Creation, 3.2 Handle Skewness, 3.3 Feature Scaling Prep, 3.4 Validation, 3.5 Save Data
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.datasets import fetch_california_housing
+
+# Load data directly from sklearn (NO FILE DEPENDENCY)
+dataset = fetch_california_housing(as_frame=True)
+data = dataset.frame.copy()
+data['MedHouseVal'] = dataset.target
+
+#### 3.1 FEATURE CREATION (ADD DOMAIN KNOWLEDGE)
+print("✓ 3.1 FEATURE CREATION")
+# BEST PRACTICE: Create features that make business sense for housing market
+# REAL-TIME: Room ratios, income density, and room economics are strong predictors
+# AVOID: Creating redundant features that correlate highly with existing ones
+
+# Create powerful real estate features
+data['RoomsPerHousehold'] = data['AveRooms'] / data['AveOccup']
+data['IncomePerRoom'] = data['MedInc'] / data['AveRooms']
+data['BedroomRatio'] = data['AveBedrms'] / data['AveRooms']
+data['PopulationDensity'] = data['Population'] / (data['AveOccup'] + 1)
+
+print("Created: RoomsPerHousehold, IncomePerRoom, BedroomRatio, PopulationDensity")
+
+#### 3.2 HANDLE SKEWNESS (IMPROVE MODEL PERFORMANCE)
+print("\n✓ 3.2 SKEWNESS HANDLING")
+# BEST PRACTICE: Log transform right-skewed features for better model convergence
+# REAL-TIME: Transform features with |skewness| > 1 for linear models
+# AVOID: Transforming features with minimal skewness (<0.5)
+
+# Identify and transform highly skewed features
+skewed_features = []
+numeric_cols = data.select_dtypes(include=[np.number]).columns
+for col in numeric_cols:
+    skewness = data[col].skew()
+    if abs(skewness) > 1.0:  # Strong skewness threshold
+        skewed_features.append((col, skewness))
+        data[col + '_log'] = np.log1p(data[col])
+        print(f"Transformed {col} (skewness: {skewness:.2f})")
+
+#### 3.3 FEATURE SCALING PREPARATION (GET READY FOR MODELS)
+print("\n✓ 3.3 FEATURE SCALING PREPARATION")
+# BEST PRACTICE: Prepare features for scaling after train-test split
+# REAL-TIME: All numerical features except target need scaling for most algorithms
+# AVOID: Scaling before train-test split to prevent data leakage
+
+# Identify features for scaling (all numerical except target)
+features_to_scale = [col for col in data.select_dtypes(include=[np.number]).columns 
+                     if col != 'MedHouseVal']
+print(f"Features ready for scaling: {len(features_to_scale)} numerical features")
+
+#### 3.4 VALIDATION (ENSURE FEATURE QUALITY)
+print("\n✓ 3.4 FEATURE VALIDATION")
+print(f"Dataset shape after engineering: {data.shape}")
+print(f"Original features: {dataset.frame.shape[1]}, New features: {data.shape[1] - dataset.frame.shape[1]}")
+
+# Check correlation of new features with target
+new_features = ['RoomsPerHousehold', 'IncomePerRoom', 'BedroomRatio', 'PopulationDensity']
+print("\nNew features correlation with MedHouseVal:")
+for feature in new_features:
+    corr = data[feature].corr(data['MedHouseVal'])
+    print(f"{feature}: {corr:.3f}")
+
+#### 3.5 SAVE ENGINEERED DATA (REPRODUCIBILITY)
+data.to_csv('engineered_data.csv', index=False)
+print("\n💾 Engineered data saved for Step 4: Model Preparation")
+
+#### READY FOR STEP 4: MODEL PREPARATION
+# NEXT: Train-test split, feature scaling, and baseline model training
