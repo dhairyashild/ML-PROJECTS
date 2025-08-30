@@ -1,0 +1,29 @@
+import seaborn as sns
+
+# 1.1 Load original dataset
+dataset = sns.load_dataset("titanic")
+
+# 1.2 Create working copy
+data = dataset.copy()
+
+# 1.3 Data validation checks
+print("✓ CHECK 1: WORKING DATA STRUCTURE")
+print(data.head(3))
+print(data.tail(3))
+
+print("✓ CHECK 2: DATA SHAPE")
+print(f"Rows: {data.shape[0]}, Columns: {data.shape[1]}")
+print(data.shape)
+
+print("✓ CHECK 3: DATA TYPES")
+print(data.dtypes)
+
+print(data.isnull().sum())
+
+# 1.4 Target verification - ONLY CHANGE NEEDED
+print("✓ CHECK 4: TARGET VARIABLE VERIFICATION")
+target_column = 'survived'  # Changed from 'MedHouseVal' to 'survived'
+if target_column not in data.columns:
+    print(f"✗ ERROR: Target '{target_column}' missing")
+    exit()
+print(f"✓ Target '{target_column}' found")
